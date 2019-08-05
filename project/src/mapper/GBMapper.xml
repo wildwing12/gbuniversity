@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="gb">
+	<insert id="join">
+		insert into students (stdid,passwd,stdname,age,hp,major,stdaddress,stdaddress2,stdemail)
+		values(#{stdid},#{passwd},#{stdname},#{age},#{hp},#{major},#{stdaddress},#{stdaddress2},#{stdemail})	
+	</insert>
+	<select id="idcheck" resultType="int">
+		select count(*) from students where stdid=#{stdid}
+	</select>
+	<select id="std_login" resultType="int">
+		select count(*) from students where stdid=#{stdid} and passwd=#{passwd}
+	</select>
+	
+	<select id="stdInfo" resultType="model.dto.StudentDTO">
+		select * from students where stdid=#{stdid}
+	</select>
+
+	<insert id="insertRegister">
+		insert into cart(cnum,subcode,stdid,proname,term) 
+		values(cart_seq.nextval, #{subcode},#{stdid},#{proname},#{term})
+	</insert>
+	<select id="resiterlist" resultType="model.dto.RegisterDTO">
+		select s.subcode,p.major, s.subname, s.subnum, s.categories, s.proname, s.term
+		from subject s, professors p 
+		where s.proname=p.proname
+	</select>
+	<select id="resiterlist2" resultType="model.dto.RegisterDTO">
+		select c.cnum, c.subcode, c.proname, p.major, b.subname, b.categories, b.subnum, b.term 
+		from cart c, students s, subject b, professors p
+		where c.stdid=s.stdid and c.subcode=b.subcode and b.proname=p.proname 
+		and c.stdid=#{stdid}
+	</select>
+	<delete id="deleteRegister">
+		delete from cart where cnum=#{cnum}
+	</delete>
+	<select id="proidcheck" resultType="int">
+		select count(*) from professors where proid=#{proid}
+	</select>
+	<insert id="pro_join">
+		insert into professors(proid,passwd,proname,age,hp,major,proaddress,proaddress2,email)
+		values(#{proid},#{passwd},#{proname},#{age},#{hp},#{major},#{proaddress},#{proaddress2},#{email})
+	</insert>
+	<select id="prologin" resultType="int">
+		select count(*) from professors where proid=#{proid} and passwd=#{passwd}
+	</select>
+	<select id="proinfo" resultType="model.dto.ProfessorDTO">
+		select*from professors where proid=#{proid}
+	</select>
+	<update id="stdUpdate">
+		update students set stdid=#{stdid},passwd=#{passwd},
+		stdname=#{stdname},age=#{age},hp=#{hp},major=#{major},
+		stdaddress=#{stdaddress},stdaddress2=#{stdaddress2},stdemail=#{stdemail}
+		where stdid=#{stdid}
+	</update>
+	<update id="updatePro">
+		update professors set 
+		proid=#{proid}, passwd=#{passwd}, proname=#{proname}, age=#{age}, hp=#{hp}, 
+		major=#{major}, proaddress=#{proaddress}, proaddress2=#{proaddress2}, email=#{email}
+		where proid=#{proid} 
+	</update>
+	<insert id="insertSub">
+		insert into subject(proname,subcode,subname,categories,subnum,term)
+		values (#{proname},#{subcode},#{subname},#{categories},#{subnum},#{term})
+	</insert>
+	<select id="subList" resultType="model.dto.RegisterDTO">
+		select*from subject
+	</select>
+	<update id="updatePlan">
+		update anounce_t set plan=#{plan} where anum=#{anum}
+	</update>
+	<select id="planList" resultType="model.dto.ScheduleDTO">
+		select plan from anounce_t 
+	</select>
+	<select id="scheduleList" resultType="model.dto.ScheduleDTO">
+		select *from schedule order by schnum 
+	</select>
+	<select id="compare1" resultType="int">
+		select * from subject where subcode=#{subcode}
+	</select>
+	<select id="compare2" resultType="int">
+		select subcode from cart where subcode=#{subcode}
+	</select>
+	<select id="forgotid" resultType="String">
+		select stdid from students where stdname=#{stdname} and stdemail=#{stdemail}
+	</select>
+	<select id="forgotpw" resultType="int">
+	 select count(*) from students where stdid=#{stdid} and hp=#{hp}
+	</select>
+	<update id="updatePw">
+		update students set passwd=#{passwd} where stdid=#{stdid}
+	</update>
+	<select id="proforgotid" resultType="String">
+		select proid from professors where proname=#{proname} and email=#{email}
+	</select>
+	<select id="proforgotpw" resultType="int">
+	 select count(*) from professors where proid=#{proid} and hp=#{hp}
+	</select>
+	<update id="proupdatePw">
+		update professors set passwd=#{passwd} where proid=#{proid}
+	</update>
+</mapper>

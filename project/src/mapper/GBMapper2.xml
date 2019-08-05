@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="gb2">
+	<insert id="insert">
+		insert into schedule(schnum,eday,event,writer)
+		values (seq_schedule.nextval,#{eday},#{event},#{writer})	
+	</insert>
+	<delete id="delete">
+		delete from schedule where schnum=#{schnum}
+	</delete>
+	<select id="cartlist" resultType="model.dto.CartDTO">
+		 select c.cnum,s.subcode, s.subname, p.proname, s.subnum,s.term
+		from subject s, professors p, students t, cart c
+		where c.proname=p.proname and c.subcode=s.subcode and t.stdid=c.stdid 
+		and t.stdid=#{stdid} and c.eval='y'
+	</select>
+	<update id="cartInsert">
+		update cart set eval_score1=#{eval_score1},eval_score2=#{eval_score2},
+		eval_score3=#{eval_score3},eval_score4=#{eval_score4},eval_score5=#{eval_score5},
+		eval_score6=#{eval_score6},eval_score7=#{eval_score7},eval_score8=#{eval_score8},
+		eval_score9=#{eval_score9},suggestion=#{suggestion}, eval='n' where cnum=#{cnum}
+	</update>
+	<select id="cart_detail" resultType="model.dto.CartDTO">
+		select c.cnum, c.proname, s.subname 
+		from cart c, subject s
+		 where c.subcode=s.subcode and c.cnum=#{cnum}
+	</select>
+	<select id="check_eval" resultType="model.dto.CartDTO">
+			select c.cnum,s.subcode, s.subname, p.proname, s.subnum, (eval_score1+eval_score2+eval_score3+eval_score4+eval_score5+eval_score6+eval_score7+eval_score8+eval_score9) eval_sum
+			from subject s, professors p, students t, cart c
+			where c.proname=p.proname and c.subcode=s.subcode and t.stdid=c.stdid 
+			and p.proname=#{p.proname} and c.eval='n'
+	</select>
+	<select id="view" resultType="model.dto.CartDTO">
+		select * from cart where cnum=#{cnum}
+	</select>
+	<select id="allScoreList" resultType="model.dto.ScoreDTO">
+		select j.subcode, j.subname, p.proname, j.categories, s.score, j.term
+        from score s, subject j, professors p
+        where s.subcode=j.subcode and s.proid=p.proid
+        and s.stdid=#{stdid}
+	</select>
+	<select id="input_list" resultType="model.dto.CartDTO">
+		select c.cnum, c.term, c.subcode, s.subname,s.categories, c.stdid, t.stdname  
+        from cart c, students t, subject s
+        where c.stdid=t.stdid and c.subcode=s.subcode
+        and c.proname=#{proname} and c.show='y' 
+	</select>
+	<insert id="insertScore">
+		insert into score(snum,proid,cnum,subcode,score,stdid)
+		values(score_seq.nextval,#{proid},#{cnum},#{subcode},#{score},#{stdid})
+	</insert>
+	<select id="smallList" resultType="model.dto.CartDTO">
+		select c.cnum,c.stdid,t.stdname,t.major,s.subname 
+		from cart c, students t, subject s
+		where c.subcode=s.subcode and c.stdid=t.stdid
+		and c.cnum=#{cnum}
+	</select>
+	<update id="chaswg">
+		update cart set show='n' where cnum=#{cnum}
+	</update>
+	<select id="updateList" resultType="model.dto.ScoreDTO">
+		select j.term, s.subcode, j.subname, j.categories, s.stdid, t.stdname, s.score, s.snum 
+         from score s, subject j, students t
+         where s.subcode=j.subcode and s.stdid=t.stdid
+         and s.proid=#{proid}
+	</select>
+	<select id="updateView" resultType="model.dto.ScoreDTO">
+		select s.snum,t.stdid,t.stdname, t.major, s.subname, s.score, s.cnum 
+        from score s, students t
+        where s.stdid=t.stdid and s.cnum=#{cnum}
+	</select>
+	<update id="updateScore">
+		update score set score=#{score} where snum=#{snum}
+	</update>
+	<select id="totalList" resultType="model.dto.ScoreDTO">
+	select j.term,
+(select sum( j.subnum) from score s, subject j where  s.subcode=j.subcode 
+and s.stdid=#{stdid} and j.categories='교양' and j.term=#{term}) sumliberal,
+(select sum( j.subnum) from score s, subject j where  s.subcode=j.subcode 
+and s.stdid=#{stdid} and j.categories='전선' and j.term=#{term}) sumselection,
+(select sum( j.subnum) from score s, subject j where  s.subcode=j.subcode 
+and s.stdid=#{stdid} and j.categories='전필' and j.term=#{term}) sumEssentials,
+(select sum( j.subnum) from score s, subject j where  s.subcode=j.subcode 
+and s.stdid=#{stdid} and j.term=#{term}) total,
+(select round((select (select (select sum(s.score) from score s, subject j where s.subcode=j.subcode
+and s.stdid=#{stdid} and j.categories='교양')*2 from dual)+
+(select (select sum(s.score) from score s, subject j where s.subcode=j.subcode
+and s.stdid=#{stdid} and j.categories='전선')*3 from dual)+
+(select (select sum(s.score) from score s, subject j where s.subcode=j.subcode
+and s.stdid=#{stdid} and j.categories='전필')*3 from dual) from dual)
+/(select sum( j.subnum) from score s, subject j where  s.subcode=j.subcode 
+and s.stdid=#{stdid} and j.term=#{term}),2) from dual) term_grade
+from score s, subject j, professors p
+where s.subcode=j.subcode and s.proid=p.proid
+and s.stdid=#{stdid} and j.term=#{term}
+group by j.term
+	</select>
+	<select id="getTerm" resultType="model.dto.ScoreDTO">
+		select j.term from score s, subject j
+		where s.subcode=j.subcode
+		and s.stdid=#{stdid}
+        group by j.term
+	</select>
+	<delete id="deleteSubject">
+		delete from subject where subcode=#{subcode}
+	</delete>
+</mapper>

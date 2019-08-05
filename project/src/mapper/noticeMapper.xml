@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="notice">
+	<select id="count" resultType="int">
+		select count(*) from board
+	</select>
+	<select id="list" resultType="model.dto.NoticeDTO">
+		select * from (
+		select A.*, rownum as rn
+		from
+		(select num,writer,subject,reg_date,readcount,filename,filesize
+		from board
+		where ${searchkey} like #{keyword} 
+		order by num desc) A
+		) where rn between #{start} and #{end}
+	</select>
+	<insert id="write">
+		insert into board(num,writer,subject,ref,re_step,re_level,content,ip,filename,filesize) 
+		values((select nvl(max(num)+1,1) from board)
+  		,#{writer},#{subject}
+  		,(select nvl(max(num)+1,1) from board)
+  		,1,0,#{content},#{ip},#{filename},#{filesize})
+	</insert>
+	<select id="view" resultType="model.dto.NoticeDTO">
+		select * from board
+		where num=#{num}
+	</select>
+	<update id="plusReadCount">
+		update board set readcount=readcount+1
+		where num=#{num}
+	</update>
+	<select id="onlylist" resultType="model.dto.NoticeDTO">
+		select * from (
+		select A.*, rownum as rn
+		from
+		(
+		select num,writer,subject,reg_date,readcount,filename,filesize
+		from board order by num desc) A
+		) where rn&lt;3
+	</select>
+	<update id="update">
+		update board set
+		subject=#{subject}, content=#{content}
+		,filename=#{filename},filesize=#{filesize},down=#{down}
+		where num=#{num}
+	</update>
+	<delete id="delete">
+		delete from board
+		where num=#{num}
+	</delete>
+	<select id="fileName" resultType="String">
+		select filename from board where num=#{num}
+	</select>
+	<update id="downPlus">
+		update board set down=down+1 where num=#{num}
+	</update>
+</mapper>
